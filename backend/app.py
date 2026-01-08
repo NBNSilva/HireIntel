@@ -1,78 +1,120 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import pandas as pd
 import joblib
 import os
+
+from database import db, User, Application
 
 app = Flask(__name__)
 CORS(app)
 
-# ---------------- USERS ----------------
-USERS = {
-    "candidate1": {"password": "1234", "role": "candidate"},
-    "hr1": {"password": "admin123", "role": "hr"}
-}
+# DATABASE CONFIG
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///hireintel.db"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-# ---------------- LOAD MODEL ----------------
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = os.path.join(BASE_DIR, "model", "hireintel_model.pkl")
+db.init_app(app)
+
+# LOAD AI MODEL
+MODEL_PATH = os.path.join("model", "hireintel_model.pkl")
 model = joblib.load(MODEL_PATH)
 
-DATA_PATH = "data/candidates.csv"
+# -------------------------------
+# CREATE DATABASE TABLES (ONCE)
+# -------------------------------
+with app.app_context():
+    db.create_all()
 
-# ---------------- LOGIN ----------------
+# -------------------------------
+# AUTH: SIGN UP (CANDIDATE ONLY)
+# -------------------------------
+@app.route("/signup", methods=["POST"])
+def signup():
+    data = request.json
+
+    user = User(
+        email=data["email"],
+        password=data["password"],
+        role="candidate"
+    )
+
+    db.session.add(user)
+    db.session.commit()
+
+    return jsonify({"message": "Candidate account created"})
+
+# -------------------------------
+# AUTH: LOGIN (HR + CANDIDATE)
+# -------------------------------
 @app.route("/login", methods=["POST"])
 def login():
     data = request.json
-    username = data.get("username")
-    password = data.get("password")
 
-    user = USERS.get(username)
+    user = User.query.filter_by(
+        email=data["email"],
+        password=data["password"]
+    ).first()
 
-    if user and user["password"] == password:
-        return jsonify({
-            "success": True,
-            "role": user["role"]
-        })
+    if not user:
+        return jsonify({"error": "Invalid credentials"}), 401
 
-    return jsonify({"success": False}), 401
+    return jsonify({
+        "user_id": user.id,
+        "role": user.role
+    })
 
-# ---------------- CANDIDATE SUBMIT ----------------
+# -------------------------------
+# CANDIDATE SUBMIT FORM + AI
+# -------------------------------
 @app.route("/candidate/submit", methods=["POST"])
 def submit_candidate():
     data = request.json
 
-    df = pd.DataFrame([data])
+    # AI FEATURES
+    features = [[
+        int(data["experience"]),
+        len(data["skills"].split(","))
+    ]]
 
-    if os.path.exists(DATA_PATH):
-        df.to_csv(DATA_PATH, mode="a", header=False, index=False)
-    else:
-        df.to_csv(DATA_PATH, index=False)
+    prediction = model.predict(features)[0]
+    result = "Suitable" if prediction == 1 else "Not Suitable"
 
-    return jsonify({"message": "Application submitted successfully"})
+    application = Application(
+        user_id=data["user_id"],
+        first_name=data["firstName"],
+        last_name=data["lastName"],
+        email=data["email"],
+        education=data["education"],
+        experience=data["experience"],
+        skills=data["skills"],
+        ai_result=result
+    )
 
-# ---------------- HR: GET CANDIDATES ----------------
+    db.session.add(application)
+    db.session.commit()
+
+    return jsonify({"ai_result": result})
+
+# -------------------------------
+# HR DASHBOARD: VIEW CANDIDATES
+# -------------------------------
 @app.route("/hr/candidates", methods=["GET"])
-def get_candidates():
-    if not os.path.exists(DATA_PATH):
-        return jsonify([])
+def hr_candidates():
+    applications = Application.query.all()
 
-    df = pd.read_csv(DATA_PATH)
-    return jsonify(df.to_dict(orient="records"))
+    data = []
+    for app_data in applications:
+        data.append({
+            "name": f"{app_data.first_name} {app_data.last_name}",
+            "education": app_data.education,
+            "experience": app_data.experience,
+            "skills": app_data.skills,
+            "result": app_data.ai_result
+        })
 
-# ---------------- HR: RUN MODEL ----------------
-@app.route("/hr/run-model", methods=["POST"])
-def run_model():
-    df = pd.read_csv(DATA_PATH)
+    return jsonify(data)
 
-    X = df.drop(columns=["result"], errors="ignore")
-    predictions = model.predict(X)
-
-    df["AI_Result"] = predictions
-    df.to_csv(DATA_PATH, index=False)
-
-    return jsonify({"message": "Model executed successfully"})
-
-# ---------------- MAIN ----------------
+# -------------------------------
+# RUN SERVER
+# -------------------------------
 if __name__ == "__main__":
     app.run(debug=True)
