@@ -12,16 +12,15 @@ class User(db.Model):
 
 
 class Application(db.Model):
-    __tablename__ = "applications"
-
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, nullable=False)
 
-    first_name = db.Column(db.String(50))
-    last_name = db.Column(db.String(50))
+    first_name = db.Column(db.String(100))
+    last_name = db.Column(db.String(100))
     email = db.Column(db.String(120))
-    education = db.Column(db.String(50))
+
+    education = db.Column(db.String(100))
     experience = db.Column(db.Integer)
     skills = db.Column(db.String(300))
 
-    ai_result = db.Column(db.String(20))  # Suitable / Not Suitable
+    ai_score = db.Column(db.Float)
+    ai_result = db.Column(db.String(50))

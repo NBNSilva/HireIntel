@@ -2,6 +2,8 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import joblib
 import os
+import pandas as pd
+
 
 from database import db, User, Application
 
@@ -21,8 +23,21 @@ model = joblib.load(MODEL_PATH)
 # -------------------------------
 # CREATE DATABASE TABLES (ONCE)
 # -------------------------------
+
 with app.app_context():
     db.create_all()
+    # AUTO-CREATE HR ACCOUNT IF NOT EXISTS
+    hr_user = User.query.filter_by(role="hr").first()
+    if not hr_user:
+        hr = User(
+            email="hr@hireintel.com",
+            password="admin123",
+            role="hr"
+        )
+        db.session.add(hr)
+        db.session.commit()
+
+
 
 # -------------------------------
 # AUTH: SIGN UP (CANDIDATE ONLY)
@@ -69,30 +84,51 @@ def login():
 def submit_candidate():
     data = request.json
 
-    # AI FEATURES
-    features = [[
-        int(data["experience"]),
-        len(data["skills"].split(","))
-    ]]
+    # Extract form values
+    education = data.get("education")
+    experience = int(data.get("experience", 0))
+    skills = data.get("skills", "")
+    job_role = data.get("job_role", "Software Developer")
+    certifications = data.get("certifications", "None")
+    projects_count = int(data.get("projects_count", 0))
 
-    prediction = model.predict(features)[0]
-    result = "Suitable" if prediction == 1 else "Not Suitable"
+    # 🔑 MATCH TRAINING DATASET COLUMN NAMES EXACTLY
+    input_df = pd.DataFrame([{
+        "Education": education,
+        "Experience (Years)": experience,
+        "Skills": skills,
+        "Certifications": certifications,
+        "Projects Count": projects_count,
+        "Job Role": job_role
+    }])
 
+    # AI Prediction
+    prediction = model.predict(input_df)[0]
+    probability = model.predict_proba(input_df)[0][1]
+
+    ai_result = "Suitable" if prediction == 1 else "Not Suitable"
+    ai_score = round(float(probability) * 100, 2)
+
+    # ✅ SAVE USING SQLALCHEMY
     application = Application(
-        user_id=data["user_id"],
         first_name=data["firstName"],
         last_name=data["lastName"],
         email=data["email"],
-        education=data["education"],
-        experience=data["experience"],
-        skills=data["skills"],
-        ai_result=result
+        education=education,
+        experience=experience,
+        skills=skills,
+        ai_score=ai_score,
+        ai_result=ai_result
     )
 
     db.session.add(application)
     db.session.commit()
 
-    return jsonify({"ai_result": result})
+    return jsonify({
+        "status": "success",
+        "ai_score": ai_score,
+        "result": ai_result
+    })
 
 # -------------------------------
 # HR DASHBOARD: VIEW CANDIDATES

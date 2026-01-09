@@ -1,19 +1,19 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import Login from "../pages/LogIn";
 
 export default function CandidateLanding() {
-  return (
-    <div className="flex flex-col min-h-screen bg-slate-100">
-      {/* HEADER */}
-      <header className="flex items-center justify-between px-10 py-6 bg-white shadow">
-        <h1 className="text-2xl font-bold text-indigo-700">HireIntel</h1>
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
-        <Link to="/login" className="text-sm font-medium text-indigo-600">
-          Candidate Login
-        </Link>
+  return (
+    <div className="relative flex flex-col min-h-screen bg-gradient-to-br from-indigo-50 via-slate-100 to-white">
+      {/* HEADER */}
+      <header className="z-10 flex items-center justify-between px-10 py-6 shadow bg-white/80 backdrop-blur">
+        <h1 className="text-2xl font-bold text-indigo-700">HireIntel</h1>
+        <span className="text-sm text-gray-500">Candidate Portal</span>
       </header>
 
       {/* HERO */}
-      <main className="flex items-center justify-center flex-1 px-6">
+      <main className="relative z-10 flex items-center justify-center flex-1 px-6">
         <div className="grid items-center w-full max-w-5xl grid-cols-1 gap-12 md:grid-cols-2">
           {/* TEXT */}
           <div>
@@ -35,19 +35,12 @@ export default function CandidateLanding() {
             </p>
 
             <div className="flex gap-4 mt-8">
-              <Link
-                to="/signup"
-                className="px-6 py-3 font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-500"
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="px-6 py-3 font-semibold text-white bg-indigo-600 rounded-lg shadow hover:bg-indigo-500"
               >
                 Apply for a Job
-              </Link>
-
-              <Link
-                to="/login"
-                className="px-6 py-3 font-semibold text-gray-700 border rounded-lg"
-              >
-                Login
-              </Link>
+              </button>
             </div>
           </div>
 
@@ -68,9 +61,31 @@ export default function CandidateLanding() {
       </main>
 
       {/* FOOTER */}
-      <footer className="py-6 text-sm text-center text-gray-500">
+      <footer className="z-10 py-6 text-sm text-center text-gray-500">
         © {new Date().getFullYear()} HireIntel · Ethical AI Recruitment
       </footer>
+
+      {/* ================= MODAL ================= */}
+      {showAuthModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="relative w-full max-w-md p-8 bg-white shadow-xl rounded-xl animate-fadeIn">
+            {/* CLOSE BUTTON */}
+            <button
+              onClick={() => setShowAuthModal(false)}
+              className="absolute text-gray-400 top-4 right-4 hover:text-gray-600"
+            >
+              ✕
+            </button>
+
+            {/* LOGIN / SIGNUP COMPONENT */}
+            <h3 className="mb-4 text-xl font-semibold text-center text-gray-900">
+              Sign in to Apply
+            </h3>
+
+            <Login loginType="candidate" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

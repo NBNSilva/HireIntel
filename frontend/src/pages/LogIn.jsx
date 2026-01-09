@@ -1,56 +1,73 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
-export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+export default function Login({ loginType }) {
   const navigate = useNavigate();
 
-  const handleLogin = async () => {
-    const res = await fetch("http://127.0.0.1:5000/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isSignup, setIsSignup] = useState(false);
 
-    if (!res.ok) {
-      alert("Invalid credentials");
-      return;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const url = isSignup
+        ? "http://127.0.0.1:5000/signup"
+        : "http://127.0.0.1:5000/login";
+
+      const res = await axios.post(url, { email, password });
+
+      if (!isSignup) {
+        const { role, user_id } = res.data;
+        localStorage.setItem("user_id", user_id);
+
+        if (role === "hr") navigate("/admin");
+        else navigate("/apply");
+      } else {
+        alert("Account created. Please log in.");
+        setIsSignup(false);
+      }
+    } catch {
+      alert("Authentication failed");
     }
-
-    const data = await res.json();
-    localStorage.setItem("role", data.role);
-    localStorage.setItem("user_id", data.user_id);
-
-    if (data.role === "candidate") navigate("/apply");
-    if (data.role === "hr") navigate("/admin");
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="p-8 bg-white rounded shadow w-96">
-        <h2 className="mb-4 text-xl font-semibold">Login</h2>
+    <form onSubmit={handleSubmit}>
+      <input
+        className="w-full p-2 mb-3 border rounded"
+        placeholder="Email"
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+      />
 
-        <input
-          className="w-full px-3 py-2 mb-3 border"
-          placeholder="Email"
-          onChange={(e) => setEmail(e.target.value)}
-        />
+      <input
+        className="w-full p-2 mb-4 border rounded"
+        placeholder="Password"
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        required
+      />
 
-        <input
-          className="w-full px-3 py-2 mb-4 border"
-          type="password"
-          placeholder="Password"
-          onChange={(e) => setPassword(e.target.value)}
-        />
+      <button className="w-full py-2 text-white bg-indigo-600 rounded">
+        {isSignup ? "Create Account" : "Login"}
+      </button>
 
-        <button
-          onClick={handleLogin}
-          className="w-full py-2 text-white bg-indigo-600 rounded"
+      {loginType === "candidate" && (
+        <p
+          className="mt-4 text-sm text-center text-indigo-600 cursor-pointer"
+          onClick={() => setIsSignup(!isSignup)}
         >
-          Login
-        </button>
-      </div>
-    </div>
+          {isSignup
+            ? "Already have an account? Login"
+            : "New user? Create an account"}
+        </p>
+      )}
+    </form>
   );
 }
