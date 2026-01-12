@@ -23,7 +23,7 @@ export default function Login({ loginType }) {
         const { role, user_id } = res.data;
         localStorage.setItem("user_id", user_id);
 
-        if (role === "hr") navigate("/admin");
+        if (role === "hr") navigate("/dashboard"); // Changed from /admin
         else navigate("/apply");
       } else {
         alert("Account created. Please log in.");
