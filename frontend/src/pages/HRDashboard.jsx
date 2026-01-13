@@ -1,31 +1,42 @@
-import { Link } from "react-router-dom";
+// src/pages/HRDashboard.jsx
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import axios from "axios";
 import Navbar from "../components/Navbar";
 
 export default function HRDashboard() {
   const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchJobs = async () => {
     try {
-      const saved = localStorage.getItem("jobs");
-      const parsed = saved ? JSON.parse(saved) : [];
-      setJobs(Array.isArray(parsed) ? parsed : []);
+      const response = await axios.get("http://127.0.0.1:5000/jobs");
+      setJobs(response.data);
     } catch (err) {
-      console.error("Error loading jobs:", err);
+      console.error("Failed to load jobs:", err);
       setJobs([]);
+    } finally {
+      setLoading(false);
     }
-  }, []);
-
-  const deleteJob = (indexToDelete) => {
-    const updatedJobs = jobs.filter((_, index) => index !== indexToDelete);
-    setJobs(updatedJobs);
-    localStorage.setItem("jobs", JSON.stringify(updatedJobs));
   };
 
-  const clearAllJobs = () => {
-    if (window.confirm("Are you sure you want to delete ALL job posts?")) {
-      localStorage.removeItem("jobs");
-      setJobs([]);
+  useEffect(() => {
+    fetchJobs();
+  }, []);
+
+  const handleDelete = async (jobId) => {
+    if (!window.confirm("Are you sure you want to delete this job post?")) {
+      return;
+    }
+
+    try {
+      // We'll add this endpoint in Flask next
+      await axios.delete(`http://127.0.0.1:5000/hr/job/${jobId}`);
+      alert("Job deleted successfully");
+      fetchJobs(); // refresh list
+    } catch (err) {
+      console.error("Delete failed:", err);
+      alert("Failed to delete job. Please try again.");
     }
   };
 
@@ -34,30 +45,22 @@ export default function HRDashboard() {
       <Navbar role="hr" />
 
       <div className="min-h-screen p-6 md:p-10 bg-gray-50">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-3xl font-bold text-gray-900">HR Dashboard</h1>
-            {jobs.length > 0 && (
-              <button
-                onClick={clearAllJobs}
-                className="px-4 py-2 text-sm font-medium text-red-600 transition border border-red-200 rounded-lg bg-red-50 hover:bg-red-100"
-              >
-                Clear All Jobs
-              </button>
-            )}
           </div>
 
           {/* Quick Actions */}
-          <div className="grid gap-6 mb-12 sm:grid-cols-2">
+          <div className="grid gap-6 mb-12 sm:grid-cols-2 lg:grid-cols-3">
             <Link
-              to="/admin" // ← Changed to navigate to AdminDashboard
+              to="/admin"
               className="block p-6 transition bg-white border border-gray-200 shadow-sm rounded-xl hover:shadow-md hover:border-indigo-300"
             >
               <h2 className="text-xl font-semibold text-indigo-700">
                 Analyze Candidates
               </h2>
               <p className="mt-2 text-sm text-gray-600">
-                Review and score applicant submissions
+                Review and evaluate applicant submissions
               </p>
             </Link>
 
@@ -66,51 +69,63 @@ export default function HRDashboard() {
               className="block p-6 transition bg-white border border-gray-200 shadow-sm rounded-xl hover:shadow-md hover:border-indigo-300"
             >
               <h2 className="text-xl font-semibold text-indigo-700">
-                Create Job Post
+                Create New Job Post
               </h2>
               <p className="mt-2 text-sm text-gray-600">
-                Add a new job opening
+                Add a new position to the system
               </p>
             </Link>
           </div>
 
-          {/* Published Jobs */}
+          {/* Published Jobs Section */}
           <section>
-            <h2 className="mb-6 text-2xl font-bold text-gray-900">
-              Published Jobs ({jobs.length})
-            </h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Published Job Posts
+              </h2>
+              <span className="text-sm text-gray-600">
+                {loading
+                  ? "Loading..."
+                  : `${jobs.length} job${jobs.length !== 1 ? "s" : ""}`}
+              </span>
+            </div>
 
-            {jobs.length === 0 ? (
+            {loading ? (
+              <div className="p-10 text-center bg-white shadow-sm rounded-xl">
+                <p className="text-gray-500">Loading job posts...</p>
+              </div>
+            ) : jobs.length === 0 ? (
               <div className="p-10 text-center bg-white border border-gray-200 shadow-sm rounded-xl">
                 <p className="mb-4 text-lg text-gray-500">
                   No job posts created yet.
                 </p>
                 <Link
                   to="/create-job"
-                  className="inline-block px-6 py-3 font-medium text-white transition bg-indigo-600 rounded-lg hover:bg-indigo-700"
+                  className="inline-block px-6 py-3 font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
                 >
                   Create Your First Job
                 </Link>
               </div>
             ) : (
               <div className="space-y-6">
-                {jobs.map((job, index) => (
+                {jobs.map((job) => (
                   <div
-                    key={index}
+                    key={job.id}
                     className="relative p-6 transition bg-white border border-gray-200 shadow-sm rounded-xl hover:border-indigo-200"
                   >
                     <h3 className="mb-3 text-xl font-semibold text-indigo-700">
-                      {job.title || "Untitled Job"}
+                      {job.title}
                     </h3>
 
                     <p className="mb-4 text-gray-700 whitespace-pre-line">
-                      {job.description || "No description provided."}
+                      {job.description}
                     </p>
 
-                    {/* Skills */}
                     {job.skills?.length > 0 && (
                       <div className="mb-5">
-                        <p className="mb-2 font-medium text-gray-800">Skills</p>
+                        <p className="mb-2 font-medium text-gray-800">
+                          Required Skills
+                        </p>
                         <div className="flex flex-wrap gap-2">
                           {job.skills.map((skill, i) => (
                             <span
@@ -124,40 +139,23 @@ export default function HRDashboard() {
                       </div>
                     )}
 
-                    {/* Requirements */}
-                    <div className="mb-6">
-                      <p className="mb-2 font-medium text-gray-800">
-                        Requirements
-                      </p>
-                      {Array.isArray(job.requirements) &&
-                      job.requirements.length > 0 ? (
-                        <ul
-                          className="list-disc pl-6 space-y-1.5 text-gray-700"
-                          style={{ listStyleType: "disc" }}
-                        >
+                    {job.requirements?.length > 0 && (
+                      <div className="mb-6">
+                        <p className="mb-2 font-medium text-gray-800">
+                          Requirements
+                        </p>
+                        <ul className="list-disc pl-6 space-y-1.5 text-gray-700">
                           {job.requirements.map((req, i) => (
-                            <li key={i} className="ml-1">
-                              {req?.trim() || "—"}
-                            </li>
+                            <li key={i}>{req}</li>
                           ))}
                         </ul>
-                      ) : (
-                        <p className="text-sm italic text-gray-500">
-                          No requirements specified
-                        </p>
-                      )}
-                    </div>
+                      </div>
+                    )}
 
                     {/* Delete Button */}
                     <button
-                      onClick={() => {
-                        if (
-                          window.confirm(`Delete "${job.title || "this job"}"?`)
-                        ) {
-                          deleteJob(index);
-                        }
-                      }}
-                      className="absolute top-5 right-5 px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition focus:outline-none focus:ring-2 focus:ring-red-500"
+                      onClick={() => handleDelete(job.id)}
+                      className="absolute top-5 right-5 px-4 py-1.5 text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700 transition focus:outline-none focus:ring-2 focus:ring-red-500"
                     >
                       Delete
                     </button>

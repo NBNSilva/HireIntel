@@ -12,6 +12,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 
 // Protected Route wrapper (create this file if you haven't already)
 import ProtectedRoute from "./components/ProtectedRoute";
+import AvailableJobs from "./pages/AvailableJobs";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
       {!isHRApp && (
         <>
           <Route path="/" element={<CandidateLanding />} />
+          <Route path="/jobs" element={<AvailableJobs />} />
           <Route path="/apply" element={<CandidateForm />} />
 
           {/* Catch-all: redirect unknown paths to candidate home */}

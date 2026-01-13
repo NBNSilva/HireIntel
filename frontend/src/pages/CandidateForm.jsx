@@ -43,20 +43,23 @@ export default function CandidateForm() {
   // ================= THANK YOU SCREEN =================
   if (submitted) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-100">
-        <div className="max-w-lg p-10 text-center bg-white shadow rounded-xl">
-          <h2 className="text-2xl font-bold text-gray-900">
-            Application Submitted 🎉
-          </h2>
+      <div>
+        <Navbar />
+        <div className="flex items-center justify-center min-h-screen bg-slate-100">
+          <div className="max-w-lg p-10 text-center bg-white shadow rounded-xl">
+            <h2 className="text-2xl font-bold text-gray-900">
+              Application Submitted 🎉
+            </h2>
 
-          <p className="mt-4 text-gray-600">
-            Thank you for applying through HireIntel. Your application has been
-            successfully received and will be reviewed by our HR team.
-          </p>
+            <p className="mt-4 text-gray-600">
+              Thank you for applying through HireIntel. Your application has
+              been successfully received and will be reviewed by our HR team.
+            </p>
 
-          <p className="mt-2 text-gray-600">
-            You will be contacted if you are shortlisted.
-          </p>
+            <p className="mt-2 text-gray-600">
+              You will be contacted if you are shortlisted.
+            </p>
+          </div>
         </div>
       </div>
     );

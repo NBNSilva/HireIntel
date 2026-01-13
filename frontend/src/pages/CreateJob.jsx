@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import Navbar from "../components/Navbar";
 
 export default function CreateJob() {
@@ -10,21 +11,30 @@ export default function CreateJob() {
   const [skills, setSkills] = useState("");
   const [requirements, setRequirements] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const newJob = {
-      title,
-      description,
-      skills: skills.split(",").map((s) => s.trim()),
-      requirements: requirements.split("\n").map((r) => r.trim()),
+      title: title.trim(),
+      description: description.trim(),
+      skills: skills
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
+      requirements: requirements
+        .split("\n")
+        .map((r) => r.trim())
+        .filter(Boolean),
     };
 
-    const existingJobs = JSON.parse(localStorage.getItem("jobs")) || [];
-
-    localStorage.setItem("jobs", JSON.stringify([...existingJobs, newJob]));
-
-    navigate("/dashboard");
+    try {
+      await axios.post("http://127.0.0.1:5000/hr/job", newJob);
+      alert("Job posted successfully!");
+      navigate("/dashboard");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to create job. Please try again.");
+    }
   };
 
   return (
@@ -38,7 +48,6 @@ export default function CreateJob() {
         >
           <h2 className="text-2xl font-bold text-gray-900">Create Job Post</h2>
 
-          {/* JOB TITLE */}
           <div className="mt-6">
             <label className="font-medium text-gray-700">Job Title</label>
             <input
@@ -49,7 +58,6 @@ export default function CreateJob() {
             />
           </div>
 
-          {/* DESCRIPTION */}
           <div className="mt-4">
             <label className="font-medium text-gray-700">Job Description</label>
             <textarea
@@ -61,7 +69,6 @@ export default function CreateJob() {
             />
           </div>
 
-          {/* SKILLS */}
           <div className="mt-4">
             <label className="font-medium text-gray-700">
               Required Skills (comma separated)
@@ -74,7 +81,6 @@ export default function CreateJob() {
             />
           </div>
 
-          {/* REQUIREMENTS */}
           <div className="mt-4">
             <label className="font-medium text-gray-700">
               Requirements (one per line)
