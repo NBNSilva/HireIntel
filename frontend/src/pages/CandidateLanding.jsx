@@ -5,15 +5,20 @@ export default function CandidateLanding() {
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   return (
-    <div className="relative flex flex-col min-h-screen bg-gradient-to-br from-indigo-50 via-slate-100 to-white">
+    <div
+      className="relative min-h-screen bg-center bg-no-repeat bg-cover"
+      style={{
+        backgroundImage: `url(/bg-candidate-landing.jpeg)`,
+      }}
+    >
       {/* HEADER */}
-      <header className="z-10 flex items-center justify-between px-10 py-6 shadow bg-white/80 backdrop-blur">
+      <header className="z-10 flex items-start justify-between px-10 py-6 shadow bg-white/80 backdrop-blur">
         <h1 className="text-2xl font-bold text-indigo-700">HireIntel</h1>
         <span className="text-sm text-gray-500">Candidate Portal</span>
       </header>
 
       {/* HERO */}
-      <main className="relative z-10 flex items-center justify-center flex-1 px-6">
+      <main className="relative z-10 flex items-center justify-center flex-1 px-6 top-20 right-20">
         <div className="grid items-center w-full max-w-5xl grid-cols-1 gap-12 md:grid-cols-2">
           {/* TEXT */}
           <div>
@@ -44,7 +49,7 @@ export default function CandidateLanding() {
             </div>
           </div>
 
-          {/* INFO CARD */}
+          {/* INFO CARD
           <div className="p-8 bg-white shadow rounded-xl">
             <h3 className="mb-4 text-lg font-semibold text-gray-900">
               How It Works
@@ -56,12 +61,12 @@ export default function CandidateLanding() {
               <li>✔ Get evaluated using AI-assisted shortlisting</li>
               <li>✔ Await HR decision</li>
             </ul>
-          </div>
+          </div> */}
         </div>
       </main>
 
       {/* FOOTER */}
-      <footer className="z-10 py-6 text-sm text-center text-gray-500">
+      <footer className="relative z-10 py-6 text-sm text-center text-gray-500 top-36">
         © {new Date().getFullYear()} HireIntel · Ethical AI Recruitment
       </footer>
 
@@ -72,7 +77,7 @@ export default function CandidateLanding() {
             {/* CLOSE BUTTON */}
             <button
               onClick={() => setShowAuthModal(false)}
-              className="absolute text-gray-400 top-4 right-4 hover:text-gray-600"
+              className="relative bottom-0 text-gray-400 hover:text-gray-600"
             >
               ✕
             </button>
