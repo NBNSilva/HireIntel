@@ -1,8 +1,16 @@
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 import axios from "axios";
 import Navbar from "../components/Navbar";
 
 export default function CandidateForm() {
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const jobId = queryParams.get("jobId"); // reads ?jobId=... from URL
+
+  // Optional: show job title in the form header (from localStorage or passed state)
+  const applyingJob = JSON.parse(localStorage.getItem("applyingToJob") || "{}");
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -27,53 +35,66 @@ export default function CandidateForm() {
     setLoading(true);
 
     try {
-      await axios.post("http://127.0.0.1:5000/candidate/submit", {
+      const payload = {
         ...formData,
         user_id: localStorage.getItem("user_id"),
-      });
+        job_id: jobId ? Number(jobId) : null, // ← IMPORTANT: send job_id here
+      };
+
+      await axios.post("http://127.0.0.1:5000/candidate/submit", payload);
 
       setSubmitted(true);
+      // Clean up temporary storage
+      localStorage.removeItem("applyingToJob");
     } catch (err) {
+      console.error("Submission error:", err);
       alert("Failed to submit application. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  // ================= THANK YOU SCREEN =================
   if (submitted) {
     return (
-      <div>
-        <Navbar />
-        <div className="flex items-center justify-center min-h-screen bg-slate-100">
-          <div className="max-w-lg p-10 text-center bg-white shadow rounded-xl">
-            <h2 className="text-2xl font-bold text-gray-900">
-              Application Submitted 🎉
-            </h2>
-
-            <p className="mt-4 text-gray-600">
-              Thank you for applying through HireIntel. Your application has
-              been successfully received and will be reviewed by our HR team.
-            </p>
-
-            <p className="mt-2 text-gray-600">
-              You will be contacted if you are shortlisted.
-            </p>
-          </div>
+      <div className="flex items-center justify-center min-h-screen bg-slate-100">
+        <div className="max-w-lg p-10 text-center bg-white shadow rounded-xl">
+          <h2 className="text-2xl font-bold text-gray-900">
+            Application Submitted 🎉
+          </h2>
+          <p className="mt-4 text-gray-600">
+            Thank you for applying through HireIntel. Your application has been
+            successfully received and will be reviewed by our HR team.
+          </p>
         </div>
       </div>
     );
   }
 
-  // ================= FORM =================
   return (
     <div>
       <Navbar role="candidate" />
+
       <div className="min-h-screen px-4 py-12 bg-gradient-to-br from-indigo-50 via-slate-100 to-white">
         <div className="max-w-3xl p-10 mx-auto bg-white shadow-lg rounded-2xl">
+          {/* Show which job they're applying for */}
+          {applyingJob.title && (
+            <div className="p-4 mb-6 border border-indigo-100 rounded-lg bg-indigo-50">
+              <p className="text-lg font-medium text-indigo-800">
+                Applying for:{" "}
+                <span className="font-bold">{applyingJob.title}</span>
+              </p>
+              {applyingJob.description && (
+                <p className="mt-1 text-sm text-indigo-700">
+                  {applyingJob.description.substring(0, 120)}...
+                </p>
+              )}
+            </div>
+          )}
+
           <h1 className="mb-2 text-3xl font-bold text-gray-900">
             Job Application Form
           </h1>
+
           <p className="mb-8 text-gray-600">
             Please complete the form below. All fields are required unless
             stated otherwise.
@@ -178,7 +199,6 @@ export default function CandidateForm() {
               />
             </div>
 
-            {/* SUBMIT */}
             <div className="pt-6">
               <button
                 type="submit"

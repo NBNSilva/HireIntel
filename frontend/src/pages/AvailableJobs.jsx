@@ -25,9 +25,10 @@ export default function AvailableJobs() {
   }, []);
 
   const handleApply = (job) => {
-    // You can store job info if needed later (e.g. show job title in form)
+    // Store job temporarily so we can show title in form
     localStorage.setItem("applyingToJob", JSON.stringify(job));
-    navigate("/apply");
+    // Navigate with jobId in URL
+    navigate(`/apply?jobId=${job.id}`);
   };
 
   if (loading) {
