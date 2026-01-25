@@ -19,6 +19,8 @@ export default function CandidateForm() {
     education: "",
     experience: "",
     skills: "",
+    certifications: "",
+    projectsCount: "",
   });
 
   const [submitted, setSubmitted] = useState(false);
@@ -299,6 +301,66 @@ export default function CandidateForm() {
                   >
                     Years of Experience *
                   </label>
+                </div>
+              </div>
+
+              {/* Projects & Certifications */}
+              <div className="space-y-6">
+                <h2 className="pb-3 text-2xl font-semibold text-gray-900 border-b border-gray-200">
+                  Projects & Certifications
+                </h2>
+
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  <div className="relative">
+                    <input
+                      type="number"
+                      name="projectsCount"
+                      id="projectsCount"
+                      value={formData.projectsCount}
+                      onChange={handleChange}
+                      onFocus={() => handleFocus("projectsCount")}
+                      onBlur={() => handleBlur("projectsCount")}
+                      min="0"
+                      required
+                      className="w-full px-4 pt-6 pb-2 transition-all border border-gray-300 rounded-lg outline-none peer focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                      placeholder=" "
+                    />
+                    <label
+                      htmlFor="projectsCount"
+                      className={`absolute left-4 transition-all duration-200 pointer-events-none ${
+                        focused.projectsCount || formData.projectsCount
+                          ? "text-xs text-indigo-600 top-2"
+                          : "text-gray-500 top-4"
+                      }`}
+                    >
+                      Number of Projects *
+                    </label>
+                  </div>
+
+                  <div className="relative">
+                    <input
+                      type="text"
+                      name="certifications"
+                      id="certifications"
+                      value={formData.certifications}
+                      onChange={handleChange}
+                      onFocus={() => handleFocus("certifications")}
+                      onBlur={() => handleBlur("certifications")}
+                      required
+                      className="w-full px-4 pt-6 pb-2 transition-all border border-gray-300 rounded-lg outline-none peer focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                      placeholder=" "
+                    />
+                    <label
+                      htmlFor="certifications"
+                      className={`absolute left-4 transition-all duration-200 pointer-events-none ${
+                        focused.certifications || formData.certifications
+                          ? "text-xs text-indigo-600 top-2"
+                          : "text-gray-500 top-4"
+                      }`}
+                    >
+                      Certifications (comma separated) *
+                    </label>
+                  </div>
                 </div>
               </div>
 

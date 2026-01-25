@@ -1,4 +1,4 @@
-# database.py
+# backend/database.py
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
@@ -37,11 +37,12 @@ class Application(db.Model):
     experience = db.Column(db.Integer)
     skills = db.Column(db.String(300))
 
+    # Newly added fields
+    certifications = db.Column(db.String(300))
+    projects_count = db.Column(db.Integer)
+
     ai_score = db.Column(db.Float)
     ai_result = db.Column(db.String(50))
 
-    # NEW: Link to the job the candidate applied for
+    # Link to the job the candidate applied for
     job_id = db.Column(db.Integer, db.ForeignKey('jobs.id'), nullable=True)
-
-    # Optional: Relationship to access job directly (useful in backend queries)
-    # job = db.relationship('Job', backref='applications')

@@ -1,3 +1,4 @@
+# backend/app.py
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import joblib
@@ -5,7 +6,7 @@ import os
 import pandas as pd
 from datetime import datetime
 
-from database import db, User, Application, Job   # ← make sure Job is imported
+from database import db, User, Application, Job
 
 app = Flask(__name__)
 CORS(app)
@@ -132,7 +133,7 @@ def delete_job(job_id):
     return jsonify({"message": "Job deleted"}), 200
 
 # ────────────────────────────────────────────────
-# CANDIDATE: SUBMIT APPLICATION (no AI yet)
+# CANDIDATE: SUBMIT APPLICATION
 # ────────────────────────────────────────────────
 @app.route("/candidate/submit", methods=["POST"])
 def submit_candidate():
@@ -150,7 +151,9 @@ def submit_candidate():
         education=data.get("education"),
         experience=int(data.get("experience", 0)),
         skills=data.get("skills", ""),
-        job_id=data.get("job_id")   # ← can be null
+        certifications=data.get("certifications", "None"),
+        projects_count=int(data.get("projectsCount", 0)),
+        job_id=data.get("job_id")
     )
 
     db.session.add(application)
@@ -181,8 +184,8 @@ def analyze_all():
                 "Education": app.education,
                 "Experience (Years)": app.experience,
                 "Skills": app.skills,
-                "Certifications": "None",
-                "Projects Count": 0,
+                "Certifications": app.certifications or "None",
+                "Projects Count": app.projects_count or 0,
                 "Job Role": "Software Developer"
             }])
 
@@ -218,6 +221,8 @@ def hr_candidates():
             "education": app.education,
             "experience": app.experience,
             "skills": app.skills,
+            "certifications": app.certifications,
+            "projects_count": app.projects_count,
             "ai_score": app.ai_score,
             "result": app.ai_result or "Pending",
             "job_title": job_title or "Not specified"

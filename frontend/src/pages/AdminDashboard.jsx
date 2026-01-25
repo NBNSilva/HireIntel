@@ -1,3 +1,4 @@
+// src/pages/AdminDashboard.jsx
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Navbar from "../components/Navbar";
@@ -105,6 +106,12 @@ export default function AdminDashboard() {
                         Experience
                       </th>
                       <th className="px-6 py-4 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                        Projects
+                      </th>
+                      <th className="px-6 py-4 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                        Certifications
+                      </th>
+                      <th className="px-6 py-4 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                         Skills
                       </th>
                       <th className="px-6 py-4 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
@@ -146,6 +153,12 @@ export default function AdminDashboard() {
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-700 whitespace-nowrap">
                             {c.experience} years
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-700 whitespace-nowrap">
+                            {c.projects_count}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-700">
+                            {c.certifications}
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-700">
                             {c.skills}
