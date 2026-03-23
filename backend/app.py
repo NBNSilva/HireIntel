@@ -1,21 +1,38 @@
 # backend/app.py
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
+import os
 from flask_cors import CORS
 import joblib
 import os
+from dotenv import load_dotenv
 import pandas as pd
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt
 
 from database import db, User, Application, Job
+from utils import comma_tokenizer
 
-app = Flask(__name__)
-CORS(app)
+load_dotenv()
+
+app = Flask(__name__, static_folder="../frontend/dist", static_url_path="/")
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True, allow_headers=["Content-Type", "Authorization", "Access-Control-Allow-Credentials"])
+
+@app.route("/", defaults={"path": ""})
+@app.route("/<path:path>")
+def serve(path):
+    if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
+        return send_from_directory(app.static_folder, path)
+    else:
+        return send_from_directory(app.static_folder, "index.html")
 
 # DATABASE CONFIG
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///hireintel.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URI", "sqlite:///hireintel.db")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "super-secret-default")
 
 db.init_app(app)
+jwt = JWTManager(app)
 
 # LOAD AI MODEL
 MODEL_PATH = os.path.join("model", "hireintel_model.pkl")
@@ -32,7 +49,7 @@ with app.app_context():
     if not hr_user:
         hr = User(
             email="hr@hireintel.com",
-            password="admin123",          # TODO: Hash passwords in production
+            password=generate_password_hash("admin123"),
             role="hr"
         )
         db.session.add(hr)
@@ -53,7 +70,7 @@ def signup():
 
     user = User(
         email=data["email"],
-        password=data["password"],
+        password=generate_password_hash(data["password"]),
         role="candidate"
     )
 
@@ -70,14 +87,19 @@ def login():
     data = request.json
 
     user = User.query.filter_by(
-        email=data["email"],
-        password=data["password"]
+        email=data["email"]
     ).first()
 
-    if not user:
+    if not user or not check_password_hash(user.password, data["password"]):
         return jsonify({"error": "Invalid credentials"}), 401
+    
+    access_token = create_access_token(
+        identity=str(user.id),
+        additional_claims={"role": user.role}
+    )
 
     return jsonify({
+        "access_token": access_token,
         "user_id": user.id,
         "role": user.role
     })
@@ -86,7 +108,11 @@ def login():
 # HR: CREATE JOB
 # ────────────────────────────────────────────────
 @app.route("/hr/job", methods=["POST"])
+@jwt_required()
 def create_job():
+    claims = get_jwt()
+    if claims.get("role") != "hr": return jsonify({"error": "Unauthorized"}), 403
+    
     data = request.json
 
     if not data.get("title") or not data.get("description"):
@@ -123,7 +149,11 @@ def get_jobs():
 # HR: DELETE JOB
 # ────────────────────────────────────────────────
 @app.route("/hr/job/<int:job_id>", methods=["DELETE"])
+@jwt_required()
 def delete_job(job_id):
+    claims = get_jwt()
+    if claims.get("role") != "hr": return jsonify({"error": "Unauthorized"}), 403
+    
     job = Job.query.get(job_id)
     if not job:
         return jsonify({"error": "Job not found"}), 404
@@ -169,7 +199,11 @@ def submit_candidate():
 # HR: ANALYZE ALL PENDING
 # ────────────────────────────────────────────────
 @app.route("/hr/analyze-all", methods=["POST"])
+@jwt_required()
 def analyze_all():
+    claims = get_jwt()
+    if claims.get("role") != "hr": return jsonify({"error": "Unauthorized"}), 403
+
     pending = Application.query.filter(
         (Application.ai_score.is_(None)) | (Application.ai_score == 0)
     ).all()
@@ -205,7 +239,11 @@ def analyze_all():
 # HR: LIST ALL APPLICATIONS (with job title)
 # ────────────────────────────────────────────────
 @app.route("/hr/candidates", methods=["GET"])
+@jwt_required()
 def hr_candidates():
+    claims = get_jwt()
+    if claims.get("role") != "hr": return jsonify({"error": "Unauthorized"}), 403
+
     # Join with Job to get title
     results = db.session.query(
         Application,
@@ -234,7 +272,11 @@ def hr_candidates():
 # HR: DELETE APPLICATION
 # ────────────────────────────────────────────────
 @app.route("/hr/candidate/<int:candidate_id>", methods=["DELETE"])
+@jwt_required()
 def delete_candidate(candidate_id):
+    claims = get_jwt()
+    if claims.get("role") != "hr": return jsonify({"error": "Unauthorized"}), 403
+
     app = Application.query.get(candidate_id)
     if not app:
         return jsonify({"error": "Not found"}), 404
@@ -244,4 +286,5 @@ def delete_candidate(candidate_id):
     return jsonify({"message": "Deleted"}), 200
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    port = int(os.environ.get("PORT", 7860))
+    app.run(host="0.0.0.0", port=port, debug=False)

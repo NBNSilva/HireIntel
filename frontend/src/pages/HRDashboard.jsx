@@ -1,8 +1,8 @@
 // src/pages/HRDashboard.jsx
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
-import Navbar from "../components/Navbar";
+import api from "../api";
+import Navbar from "../Components/Navbar";
 
 export default function HRDashboard() {
   const [jobs, setJobs] = useState([]);
@@ -13,7 +13,7 @@ export default function HRDashboard() {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get("http://127.0.0.1:5000/jobs");
+      const response = await api.get("/jobs");
       setJobs(response.data);
     } catch (err) {
       console.error("Failed to load jobs:", err);
@@ -33,7 +33,7 @@ export default function HRDashboard() {
     }
 
     try {
-      await axios.delete(`http://127.0.0.1:5000/hr/job/${jobId}`);
+      await api.delete(`/hr/job/${jobId}`);
       setJobs((prev) => prev.filter((job) => job.id !== jobId));
       alert("Job post deleted successfully.");
     } catch (err) {
@@ -59,7 +59,7 @@ export default function HRDashboard() {
           </div>
 
           <Link
-            to="/create-job"
+            to="/hr/create-job"
             className="inline-flex items-center px-6 py-3 font-medium text-white transition-all duration-200 bg-indigo-600 shadow-md rounded-xl hover:bg-indigo-700 hover:shadow-lg"
           >
             <svg
@@ -83,7 +83,7 @@ export default function HRDashboard() {
         {/* Quick Actions */}
         <div className="grid grid-cols-1 gap-6 mb-12 md:grid-cols-2 lg:grid-cols-3">
           <Link
-            to="/admin"
+            to="/hr/admin"
             className="p-6 transition-all duration-300 bg-white border border-gray-200 shadow-sm group rounded-2xl hover:shadow-xl hover:border-indigo-200"
           >
             <div className="flex items-center justify-between">
@@ -176,7 +176,7 @@ export default function HRDashboard() {
                 Create your first job opening to start attracting top talent.
               </p>
               <Link
-                to="/create-job"
+                to="/hr/create-job"
                 className="inline-flex items-center px-6 py-3 font-medium text-white transition bg-indigo-600 rounded-xl hover:bg-indigo-700"
               >
                 Create First Job Post

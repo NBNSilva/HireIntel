@@ -1,8 +1,8 @@
 // src/pages/CreateJob.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import Navbar from "../components/Navbar";
+import api from "../api";
+import Navbar from "../Components/Navbar";
 
 export default function CreateJob() {
   const navigate = useNavigate();
@@ -37,9 +37,9 @@ export default function CreateJob() {
     };
 
     try {
-      await axios.post("http://127.0.0.1:5000/hr/job", newJob);
+      await api.post("/hr/job", newJob);
       alert("Job posted successfully!");
-      navigate("/dashboard");
+      navigate("/hr/dashboard");
     } catch (err) {
       console.error(err);
       alert("Failed to create job. Please check your input and try again.");

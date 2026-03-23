@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api";
 
 export default function Login({ loginType }) {
   const navigate = useNavigate();
@@ -14,16 +14,17 @@ export default function Login({ loginType }) {
 
     try {
       const url = isSignup
-        ? "http://127.0.0.1:5000/signup"
-        : "http://127.0.0.1:5000/login";
+        ? "/signup"
+        : "/login";
 
-      const res = await axios.post(url, { email, password });
+      const res = await api.post(url, { email, password });
 
       if (!isSignup) {
-        const { role, user_id } = res.data;
+        const { role, user_id, access_token } = res.data;
         localStorage.setItem("user_id", user_id);
+        localStorage.setItem("token", access_token);
 
-        if (role === "hr") navigate("/dashboard"); // Changed from /admin
+        if (role === "hr") navigate("/hr/dashboard"); // Changed to unified hr route
         else navigate("/jobs");
       } else {
         alert("Account created. Please log in.");

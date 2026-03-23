@@ -1,8 +1,8 @@
 // src/pages/CandidateForm.jsx
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
-import axios from "axios";
-import Navbar from "../components/Navbar";
+import api from "../api";
+import Navbar from "../Components/Navbar";
 
 export default function CandidateForm() {
   const location = useLocation();
@@ -44,7 +44,7 @@ export default function CandidateForm() {
     setLoading(true);
 
     try {
-      await axios.post("http://127.0.0.1:5000/candidate/submit", {
+      await api.post("/candidate/submit", {
         ...formData,
         user_id: localStorage.getItem("user_id"),
         job_id: jobId ? Number(jobId) : null,
@@ -105,25 +105,25 @@ export default function CandidateForm() {
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-50">
       <Navbar role="candidate" />
 
-      <div className="max-w-4xl px-4 py-12 mx-auto sm:px-6 lg:px-8">
+      <div className="max-w-4xl px-4 py-8 mx-auto sm:px-6 lg:px-8 sm:py-12">
         <div className="overflow-hidden bg-white border shadow-xl rounded-2xl border-indigo-100/50">
           {/* Header / Job Info */}
-          <div className="px-8 py-10 text-white bg-gradient-to-r from-indigo-600 to-indigo-700">
+          <div className="px-6 py-8 text-white bg-gradient-to-r from-indigo-600 to-indigo-700 sm:px-8 sm:py-10">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold tracking-tight">
+                <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
                   Job Application
                 </h1>
                 {applyingJob.title && (
-                  <p className="mt-3 text-lg font-medium text-indigo-100">
-                    Applying for:{" "}
+                  <p className="mt-2 text-base font-medium text-indigo-100 sm:text-lg sm:mt-3">
+                    Applying for: <br className="sm:hidden" />
                     <span className="font-semibold text-white">
                       {applyingJob.title}
                     </span>
                   </p>
                 )}
               </div>
-              <div className="hidden sm:block">
+              <div className="hidden md:block">
                 <div className="flex items-center justify-center w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm">
                   <svg
                     className="w-8 h-8 text-white"
@@ -144,8 +144,8 @@ export default function CandidateForm() {
           </div>
 
           {/* Form Content */}
-          <div className="p-8 lg:p-12">
-            <p className="mb-10 text-lg text-gray-600">
+          <div className="p-6 sm:p-8 lg:p-12">
+            <p className="mb-8 text-base text-gray-600 sm:text-lg sm:mb-10">
               Please fill in your details below. All fields marked are required.
             </p>
 

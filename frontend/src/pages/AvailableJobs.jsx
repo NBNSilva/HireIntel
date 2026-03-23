@@ -1,8 +1,8 @@
 // src/pages/AvailableJobs.jsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import Navbar from "../components/Navbar";
+import api from "../api";
+import Navbar from "../Components/Navbar";
 
 export default function AvailableJobs() {
   const [jobs, setJobs] = useState([]);
@@ -16,7 +16,7 @@ export default function AvailableJobs() {
       try {
         setLoading(true);
         setError(null);
-        const response = await axios.get("http://127.0.0.1:5000/jobs");
+        const response = await api.get("/jobs");
         setJobs(response.data);
       } catch (err) {
         console.error("Failed to load jobs:", err);
@@ -41,11 +41,11 @@ export default function AvailableJobs() {
 
       <main className="px-4 py-10 mx-auto max-w-7xl sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-12 text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
+        <div className="mb-8 text-center sm:mb-12">
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-5xl">
             Open Positions
           </h1>
-          <p className="max-w-3xl mx-auto mt-4 text-xl text-gray-600">
+          <p className="max-w-3xl mx-auto mt-4 text-base text-gray-600 sm:text-xl">
             Discover exciting career opportunities and take the next step in
             your professional journey.
           </p>

@@ -1,3 +1,12 @@
+---
+title: HireIntel
+emoji: 🏢
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+pinned: false
+---
+
 # HireIntel – AI-Assisted Recruitment System
 
 HireIntel is a web-based AI-assisted recruitment platform designed to support Human Resource (HR) teams in shortlisting candidates fairly and efficiently. Instead of relying on traditional CV parsing, HireIntel uses structured candidate input and a trained machine learning model to generate relevance scores while keeping human decision-making in control.

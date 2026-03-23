@@ -3,7 +3,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
-from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics import accuracy_score
 import joblib
 
@@ -15,6 +16,13 @@ df['Recruiter Decision'] = df['Recruiter Decision'].map({
     'Hire': 1,
     'Reject': 0
 })
+
+df['Skills'] = df['Skills'].fillna('None').astype(str)
+df['Certifications'] = df['Certifications'].fillna('None').astype(str)
+df['Education'] = df['Education'].fillna('Unknown').astype(str)
+df['Job Role'] = df['Job Role'].fillna('Unknown').astype(str)
+df['Experience (Years)'] = df['Experience (Years)'].fillna(0)
+df['Projects Count'] = df['Projects Count'].fillna(0)
 
 # Select features and label
 X = df[
@@ -37,9 +45,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 # Preprocessing
 categorical_features = [
-    'Skills',
     'Education',
-    'Certifications',
     'Job Role'
 ]
 
@@ -48,9 +54,13 @@ numerical_features = [
     'Projects Count'
 ]
 
+from utils import comma_tokenizer
+
 preprocessor = ColumnTransformer(
     transformers=[
         ('cat', OneHotEncoder(handle_unknown='ignore'), categorical_features),
+        ('skills', CountVectorizer(tokenizer=comma_tokenizer, token_pattern=None, lowercase=True), 'Skills'),
+        ('certs', CountVectorizer(tokenizer=comma_tokenizer, token_pattern=None, lowercase=True), 'Certifications'),
         ('num', 'passthrough', numerical_features)
     ]
 )
@@ -58,7 +68,7 @@ preprocessor = ColumnTransformer(
 # Model pipeline
 model = Pipeline(steps=[
     ('preprocessor', preprocessor),
-    ('classifier', LogisticRegression(max_iter=1000))
+    ('classifier', RandomForestClassifier(n_estimators=100, random_state=42))
 ])
 
 # Train model
@@ -71,5 +81,5 @@ accuracy = accuracy_score(y_test, y_pred)
 print(f"Model Accuracy: {accuracy:.2f}")
 
 # Save model
-joblib.dump(model, "hireintel_model.pkl")
-print("Model saved as hireintel_model.pkl")
+joblib.dump(model, "model/hireintel_model.pkl")
+print("Model saved as model/hireintel_model.pkl")
